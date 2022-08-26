@@ -1,7 +1,7 @@
 # MDITech - Ansible Playbooks
 A collection of minimalist Ansible playbooks
 
-* LEMP on Ubuntu 20.04
+* [LEMP on Ubuntu 20.04](https://github.com/mdutt247/ansible-playbooks/tree/main/lemp_ubuntu2004)
 
 *you should setup a fresh server before starting.*
 
