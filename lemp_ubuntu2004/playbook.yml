@@ -12,7 +12,7 @@
       apt: name={{ item }} update_cache=yes state=latest force_apt_get=yes
       loop: [ 'aptitude' ]
 
-   - name: Upgrade all apt packages
+    - name: Upgrade all apt packages
       apt: upgrade=dist force_apt_get=yes
 
     - name: Check if a reboot is needed
@@ -75,12 +75,17 @@
         login_password: "{{ mysql_root_password }}"
 
 # UFW Configuration
-    - name: "UFW - Allow HTTP on port {{ http_port }}"
+    - name: UFW Allow ports
       ufw:
         rule: allow
         port: "{{ item }}"
         proto: tcp
-        loop: [ '22', '80', '443' ]
+      with_items:
+        - 22
+        - 80
+        - 443
+    - name: Enable UFW
+      shell: ufw enable
 
 # Sets Up PHP Info Page
     - name: Sets Up PHP Info Page
@@ -108,7 +113,7 @@
       apt: pkg=phpmyadmin state=present
 
     - name: configure site
-      file: path=/var/www/phpmyadmin src=/usr/share/phpmyadmin state=link
+      file: path=/var/www/html/phpmyadmin src=/usr/share/phpmyadmin state=link
 
   handlers:
     - name: Reload Nginx
