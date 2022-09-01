@@ -59,7 +59,7 @@
         password: "{{ mysql_root_password }}"
         login_unix_socket: /var/run/mysqld/mysqld.sock
 
-    - name: Removes all anonymous user accounts
+    - name: Remove all anonymous user accounts
       mysql_user:
         name: ''
         host_all: yes
@@ -67,12 +67,66 @@
         login_user: root
         login_password: "{{ mysql_root_password }}"
 
-    - name: Removes the MySQL test database
+    - name: Remove the MySQL test database
       mysql_db: 
         name: test 
         state: absent
         login_user: root
         login_password: "{{ mysql_root_password }}"
+
+    - name: Create a new project database
+      mysql_db:
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+        db: "{{ mysql_projectdatabase_name }}"
+        state: present
+
+    - name: Create a new project user
+      mysql_user:
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+        state: present
+        name: "{{ mysql_projectuser_name }}"
+        password: "{{ mysql_projectuser_password }}"
+        priv:
+          "{{ mysql_projectdatabase_name.* }}": "ALL,GRANT"
+
+    - name: Create phpmyadmin user with password and all database privileges and 'WITH GRANT OPTION'
+      mysql_user:
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+        name: "{{ mysql_phpmyadminuser_name }}"
+        password: "{{ mysql_phpmyadminuser_password }}"
+        priv: "*.*:ALL"
+        state: present
+
+# PHPMyAdmin Configuration
+    - name: debconf for pma
+      debconf: name=phpmyadmin question='phpmyadmin/dbconfig-install' value='true' vtype='boolean'
+
+    - name: debconf for pma
+      debconf: name=phpmyadmin question='phpmyadmin/app-password-confirm' value='{{ mysql_phpmyadminuser_password }}' vtype='password'
+
+    - name: debconf for pma
+      debconf: name=phpmyadmin question='phpmyadmin/mysql/admin-pass' value='{{ mysql_phpmyadminuser_password }}' vtype='password'
+
+    - name: debconf for pma
+      debconf: name=phpmyadmin question='phpmyadmin/mysql/app-pass' value='{{ mysql_phpmyadminuser_password }}' vtype='password'
+
+    - name: debconf for pma
+      debconf: name=phpmyadmin question='phpmyadmin/reconfigure-webserver' value='' vtype='multiselect'
+
+    - name: install pma
+      apt: pkg=phpmyadmin state=present
+
+    - name: configure site
+      file: path=/var/www/html/phpmyadmin src=/usr/share/phpmyadmin state=link
+
+# Sets Up PHP Info Page
+    - name: Sets Up PHP Info Page
+      template:
+        src: "files/info.php.j2"
+        dest: "/var/www/html/info.php"
 
 # UFW Configuration
     - name: UFW Allow ports
@@ -84,36 +138,6 @@
         - 22
         - 80
         - 443
-    - name: Enable UFW
-      shell: ufw enable
-
-# Sets Up PHP Info Page
-    - name: Sets Up PHP Info Page
-      template:
-        src: "files/info.php.j2"
-        dest: "/var/www/html/info.php"
-
-# PHPMyAdmin
-    - name: debconf for pma
-      debconf: name=phpmyadmin question='phpmyadmin/dbconfig-install' value='true' vtype='boolean'
-
-    - name: debconf for pma
-      debconf: name=phpmyadmin question='phpmyadmin/app-password-confirm' value='{{mysql_root_password}}' vtype='password'
-
-    - name: debconf for pma
-      debconf: name=phpmyadmin question='phpmyadmin/mysql/admin-pass' value='{{mysql_root_password}}' vtype='password'
-
-    - name: debconf for pma
-      debconf: name=phpmyadmin question='phpmyadmin/mysql/app-pass' value='{{mysql_root_password}}' vtype='password'
-
-    - name: debconf for pma
-      debconf: name=phpmyadmin question='phpmyadmin/reconfigure-webserver' value='' vtype='multiselect'
-
-    - name: install pma
-      apt: pkg=phpmyadmin state=present
-
-    - name: configure site
-      file: path=/var/www/html/phpmyadmin src=/usr/share/phpmyadmin state=link
 
   handlers:
     - name: Reload Nginx

@@ -1,5 +1,10 @@
 ---
 mysql_root_password: "mysql_root_password"
+mysql_projectdatabase_name: "mysql_projectdatabase_name"
+mysql_projectuser_name: "mysql_projectuser_name"
+mysql_projectuser_password: "mysql_projectuser_password"
+mysql_phpmyadminuser_name: "mysql_phpmyadminuser_name"
+mysql_phpmyadminuser_password: "mysql_phpmyadmin_password"
 http_host: "your_domain"
 http_conf: "your_domain.conf"
 http_port: "80"
