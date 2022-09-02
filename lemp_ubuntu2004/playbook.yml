@@ -34,45 +34,51 @@
       loop: [ 'nginx', 'mysql-server', 'python3-pymysql', 'php-fpm', 'php-mysql' ]
     
 # Nginx Configuration
-    - name: Sets Nginx conf file
+    - name: Set Nginx conf file
       template:
         src: "files/nginx.conf.j2"
         dest: "/etc/nginx/sites-available/{{ http_conf }}"
 
-    - name: Enables new site
+    - name: Enable new site
       file:
         src: "/etc/nginx/sites-available/{{ http_conf }}"
         dest: "/etc/nginx/sites-enabled/{{ http_conf }}"
         state: link
       notify: Reload Nginx
     
-    - name: Removes "default" site
+    - name: Remove "default" site
       file:
         path: "/etc/nginx/sites-enabled/default"
         state: absent
       notify: Reload Nginx
 
+#    - name: Start up the Nginx service  
+#      shell: "service nginx start"
+
+#    - name: Enable Nginx to run on startup 
+#      service: name=nginx state=started enabled=true
+
 # MySQL Configuration
-    - name: Sets the root password 
+    - name: Set the root password 
       mysql_user: 
         name: root 
         password: "{{ mysql_root_password }}"
         login_unix_socket: /var/run/mysqld/mysqld.sock
 
-    - name: Remove all anonymous user accounts
-      mysql_user:
-        name: ''
-        host_all: yes
-        state: absent
-        login_user: root
-        login_password: "{{ mysql_root_password }}"
+   - name: Remove all anonymous user accounts
+     mysql_user:
+       name: ''
+       host_all: yes
+       state: absent
+       login_user: root
+       login_password: "{{ mysql_root_password }}"
 
-    - name: Remove the MySQL test database
-      mysql_db: 
-        name: test 
-        state: absent
-        login_user: root
-        login_password: "{{ mysql_root_password }}"
+   - name: Remove the MySQL test database
+     mysql_db: 
+       name: test 
+       state: absent
+       login_user: root
+       login_password: "{{ mysql_root_password }}"
 
     - name: Create a new project database
       mysql_db:
@@ -99,6 +105,18 @@
         password: "{{ mysql_phpmyadminuser_password }}"
         priv: "*.*:ALL"
         state: present
+
+    - name: Add data to database  
+      copy: src=files/dump.sql dest=/tmp/dump.sql  
+
+    - name: Insert data into database  
+      mysql_db: name="{{ mysql_projectdatabase_name }}" state=import target=/tmp/dump.sql login_user="{{ mysql_projectuser_name }}" login_password="{{ mysql_projectuser_password }}"
+    
+#    - name: Start up the MySql service  
+#      shell: "service mysql start"  
+
+#    - name: Enable MySql to run on startup  
+#      service: name=mysql state=started enabled=true
 
 # PHPMyAdmin Configuration
     - name: debconf for pma
