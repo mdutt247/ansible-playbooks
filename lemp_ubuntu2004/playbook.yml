@@ -59,16 +59,16 @@
 #      service: name=nginx state=started enabled=true
 
 # MySQL Configuration
-    - name: Stop the MySql service  
+   - name: Stop the MySql service  
       shell: "service mysql stop"
 
-    - name: Change data directory
+   - name: Change data directory
       mysql_datadir: /mnt/data/mysql
 
-    - name: Start up the MySql service  
+   - name: Start up the MySql service  
       shell: "service mysql start"
       
-    - name: Set the root password 
+   - name: Set the root password 
       mysql_user: 
         name: root 
         password: "{{ mysql_root_password }}"
